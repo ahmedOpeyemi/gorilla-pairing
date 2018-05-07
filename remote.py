@@ -1,7 +1,7 @@
 import requests
 
 
-def getPage(route="USAmenu.htm"):
+def getPage(route):
 
     cookies = {
         '_c': 'y',

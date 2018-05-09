@@ -58,6 +58,11 @@ def make_identifier(href, name):
     return '{}-{}'.format(href, name)
 
 
+def get_name_link(identifier):
+    halves = identifier.split('-')
+    return halves[0], halves[1]
+
+
 def get_gorilla_info(gorilla_route, save_to_db=True):
     gorilla = Gorilla()
     gorilla_page_dom = BeautifulSoup(getPage(gorilla_route), HTML_PARSER)
@@ -102,7 +107,18 @@ def get_gorilla_info(gorilla_route, save_to_db=True):
                 gorilla.offsprings.append(
                     make_identifier(sibling.get(HREF_TAG), sibling.string))
     if save_to_db:
-        pass
+        insert_or_update_gorilla(gorilla, DB_CONNECTION)
+        for sibling_identifier in gorilla.siblings:
+            (href, name) = get_name_link(sibling_identifier)
+            sibling_gorilla = Gorilla(sibling_identifier, name, href)
+            insert_or_update_gorilla(sibling_gorilla, DB_CONNECTION)
+            insert_sibling(gorilla, sibling_gorilla, DB_CONNECTION)
+        # TODO: Duplicate code here, fix.
+        for offspring_identifier in gorilla.offsprings:
+            (href, name) = get_name_link(offspring_identifier)
+            offspring_gorilla = Gorilla(sibling_identifier, name, href)
+            insert_or_update_gorilla(offspring_gorilla, DB_CONNECTION)
+            insert_offspring(gorilla, offspring_gorilla, DB_CONNECTION)
     return gorilla
 
 

@@ -4,6 +4,13 @@ import re
 
 # Local imports
 from remote import getPage
+from db import (
+    create_tables,
+    get_or_create_connection,
+    insert_or_update_gorilla,
+    insert_offspring,
+    insert_sibling
+)
 
 HTML_PARSER = 'html.parser'
 ALL_ZOOS = []
@@ -14,6 +21,8 @@ FATHER_LABEL = "Sire"
 MOTHER_LABEL = "Dam"
 
 HREF_TAG = 'href'
+
+DB_CONNECTION = None
 
 
 class Gorilla:
@@ -49,7 +58,7 @@ def make_identifier(href, name):
     return '{}-{}'.format(href, name)
 
 
-def get_gorilla_info(gorilla_route):
+def get_gorilla_info(gorilla_route, save_to_db=True):
     gorilla = Gorilla()
     gorilla_page_dom = BeautifulSoup(getPage(gorilla_route), HTML_PARSER)
     name = (gorilla_page_dom.find_all("font", attrs={"size": 5})[0]).string
@@ -92,10 +101,14 @@ def get_gorilla_info(gorilla_route):
             elif sibling.name == 'a' and has_completed_siblings_tag == True:
                 gorilla.offsprings.append(
                     make_identifier(sibling.get(HREF_TAG), sibling.string))
+    if save_to_db:
+        pass
     return gorilla
 
 
 if __name__ == '__main__':
+    DB_CONNECTION = get_or_create_connection()
+    create_tables(DB_CONNECTION)
     get_all_links("USAmenu.htm", add_zoo)
     if len(ALL_ZOOS) > 0:
         for zoo_route in ALL_ZOOS:

@@ -53,18 +53,18 @@ def add_zoo(zoo_route):
 
 
 def make_identifier(href, name):
-    name = str(name).strip().replace("'", "").replace("*", "")
+    name = str(name).replace("'", "").replace("*", "").strip().replace(" ", "_")
     href = str(href).strip()
     return '{}-{}'.format(href, name)
 
 
 def get_name_link(identifier):
-    halves = identifier.split('-')
+    halves = identifier.replace("_", " ").split('-')
     return halves[0], halves[1]
 
 
 def get_gorilla_info(gorilla_route, save_to_db=True):
-    gorilla = Gorilla()
+    gorilla = Gorilla(alive=True, link=gorilla_route)
     gorilla_page_dom = BeautifulSoup(getPage(gorilla_route), HTML_PARSER)
     name = (gorilla_page_dom.find_all("font", attrs={"size": 5})[0]).string
     gorilla.name = name
@@ -106,7 +106,7 @@ def get_gorilla_info(gorilla_route, save_to_db=True):
             elif sibling.name == 'a' and has_completed_siblings_tag == True:
                 gorilla.offsprings.append(
                     make_identifier(sibling.get(HREF_TAG), sibling.string))
-    print("Gorilla object built, attempting to save: ", gorilla.identifier)
+    # print("Gorilla object built, attempting to save: ", gorilla.identifier, gorilla.link, gorilla.alive)
     if save_to_db:
         insert_or_update_gorilla(gorilla, DB_CONNECTION)
         for sibling_identifier in gorilla.siblings:

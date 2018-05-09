@@ -1,5 +1,6 @@
 # 3rd party imports
 import sqlite3
+import os
 
 # Local imports
 # - N/A
@@ -7,7 +8,10 @@ import sqlite3
 DATABASE_PATH = 'gorilla.db'
 
 
-def get_or_create_connection(db_path):
+def get_or_create_connection(db_path, destroy_if_exists=False):
+    if destroy_if_exists is True:
+        if os.path.exists(DATABASE_PATH):
+            os.remove(DATABASE_PATH)
     return sqlite3.connect(DATABASE_PATH)
 
 

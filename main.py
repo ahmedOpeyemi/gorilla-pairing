@@ -57,6 +57,20 @@ def get_gorilla_info(gorilla_route):
     )
     if len(date_of_death_tag) > 0:
         gorilla['alive'] = False
+
+    def get_parent_identifier(parent_label):
+        parent_tag = gorilla_page_dom.find(
+            string=re.compile(parent_label)
+        ).parent.find("a")
+        if parent_tag:
+            parent_name = parent_tag.string
+            parent_href = parent_tag.get(HREF_TAG)
+            return make_identifier(parent_href, parent_name)
+        return None
+
+    gorilla['sire'] = get_parent_identifier(FATHER_LABEL)
+    gorilla['dam'] = get_parent_identifier(MOTHER_LABEL)
+
     siblings_header_tag = gorilla_page_dom.find(
         text=re.compile("Siblings")).parent.parent
     siblings_tag = siblings_header_tag.find_next_sibling("p")
@@ -72,13 +86,11 @@ def get_gorilla_info(gorilla_route):
             elif sibling.name == 'a' and has_completed_siblings_tag == True:
                 gorilla['offsprings'].append(
                     make_identifier(sibling.get(HREF_TAG), sibling.string))
-        # print('siblings tag >>>', siblings_tag.children, siblings_tag.descendants, siblings_tag.contents)
-
-    print('Gorilla >>>', gorilla)
+    return gorilla
 
 
-get_all_links("USAmenu.htm", add_zoo)
-if len(ALL_ZOOS) > 0:
-    for zoo_route in ALL_ZOOS:
-        get_all_links(zoo_route, get_gorilla_info)
-        break
+if __name__ == '__main__':
+    get_all_links("USAmenu.htm", add_zoo)
+    if len(ALL_ZOOS) > 0:
+        for zoo_route in ALL_ZOOS:
+            get_all_links(zoo_route, get_gorilla_info)

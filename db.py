@@ -64,15 +64,12 @@ def create_tables(connection):
         print("Error: ", ex)
 
 
-# TODO: A lot of field repetition in this project. Use constants to replace.
-
-
 def insert_or_update_gorilla(gorilla, connection):
     try:
         record_exist = False
         cursor = connection.cursor()
         cursor.execute(
-            "SELECT COUNT(*) from gorilla where gid={}".format(gorilla['gid']))
+            "SELECT COUNT(*) from gorilla where gid={}".format(gorilla.identifier))
         (number_of_rows,) = cursor.fetchone()
         record_exist = number_of_rows > 0
         script = ''
@@ -87,25 +84,25 @@ def insert_or_update_gorilla(gorilla, connection):
                 WHERE gid={}
             '''.format(
                 1 if gorilla['alive'] is True else 0,
-                gorilla['sex'],
-                gorilla['sire'],
-                gorilla['dam'],
-                gorilla['gid']
+                gorilla.sex,
+                gorilla.sire,
+                gorilla.dam,
+                gorilla.identifier
             )
         else:
             script = '''
                 INSERT INTO gorilla(gid, name, link, alive, sex, sire, dam)
                 VALUES({}, {}, {}, {}, {}, {}, {})
             '''.format(
-                gorilla['gid'], gorilla['name'],
-                gorilla['link'], gorilla['alive'],
-                gorilla['sex'], gorilla['sire'],
-                gorilla['dam']
+                gorilla.identifier, gorilla.name,
+                gorilla.link, gorilla.alive,
+                gorilla.sex, gorilla.sire,
+                gorilla.dam
             )
         cursor.execute(script)
         connection.commit()
         print("Gorilla {} inserted/updated successfully.".format(
-            gorilla['gid']))
+            gorilla.identifier))
     except Exception as ex:
         print("Error: ", ex)
     finally:
@@ -113,10 +110,33 @@ def insert_or_update_gorilla(gorilla, connection):
         # connection.close()
 
 
+def insert_sibling(gorilla, sibling, connection):
+    try:
+        cursor = connection.cursor()
+        cursor.execute('''
+            INSERT INTO siblings(gid, sibling_id) VALUES({}, {})
+        '''.format(gorilla.identifier, sibling.identifier))
+        connection.commit()
+        print("Sibling {} of gorilla {} inserted successfully.".format(
+            sibling.identifier, gorilla.identifier))
+    except Exception as ex:
+        print("Error: ", ex)
+    finally:
+        pass
+        # connection.close()
 
-def insert_sibling(gorilla, sibling):
-    pass
 
-
-def insert_offspring(gorilla, offspring):
-    pass
+def insert_offspring(gorilla, offspring, connection):
+    try:
+        cursor = connection.cursor()
+        cursor.execute('''
+            INSERT INTO offsprings(gid, offspring_id) VALUES({}, {})
+        '''.format(gorilla.identifier, offspring.identifier))
+        connection.commit()
+        print("Offspring {} of gorilla {} inserted successfully.".format(
+            offspring.identifier, gorilla.identifier))
+    except Exception as ex:
+        print("Error: ", ex)
+    finally:
+        pass
+        # connection.close()

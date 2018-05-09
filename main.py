@@ -38,6 +38,7 @@ def make_identifier(href, name):
 def get_gorilla_info(gorilla_route):
     gorilla = {
         'identifier': None,
+        'name': None,
         'link': gorilla_route,
         'alive': True,
         'sex': None,
@@ -48,10 +49,11 @@ def get_gorilla_info(gorilla_route):
     }
     gorilla_page_dom = BeautifulSoup(getPage(gorilla_route), HTML_PARSER)
     name = (gorilla_page_dom.find_all("font", attrs={"size": 5})[0]).string
+    gorilla['name'] = name
     gorilla['identifier'] = make_identifier(gorilla_route, name)
     sex_tag = gorilla_page_dom.find_all(string=re.compile(SEX_LABEL))[0]
     if sex_tag:
-        gorilla['sex'] = "Female" if "Female" in sex_tag.string else "Male"
+        gorilla['sex'] = "F" if "Female" in sex_tag.string else "M"
     date_of_death_tag = gorilla_page_dom.find_all(
         string=re.compile(DATE_OF_DEATH_LABEL)
     )

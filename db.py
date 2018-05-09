@@ -8,11 +8,11 @@ import os
 DATABASE_PATH = 'gorilla.db'
 
 
-def get_or_create_connection(db_path, destroy_if_exists=False):
+def get_or_create_connection(db_path=DATABASE_PATH, destroy_if_exists=False):
     if destroy_if_exists is True:
-        if os.path.exists(DATABASE_PATH):
-            os.remove(DATABASE_PATH)
-    return sqlite3.connect(DATABASE_PATH)
+        if os.path.exists(db_path):
+            os.remove(db_path)
+    return sqlite3.connect(db_path)
 
 
 def create_tables(connection):

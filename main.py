@@ -106,6 +106,7 @@ def get_gorilla_info(gorilla_route, save_to_db=True):
             elif sibling.name == 'a' and has_completed_siblings_tag == True:
                 gorilla.offsprings.append(
                     make_identifier(sibling.get(HREF_TAG), sibling.string))
+    print("Gorilla object built, attempting to save ", gorilla)
     if save_to_db:
         insert_or_update_gorilla(gorilla, DB_CONNECTION)
         for sibling_identifier in gorilla.siblings:

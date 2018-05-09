@@ -61,7 +61,7 @@ def create_tables(connection):
             cursor.execute(table_script)
             connection.commit()
     except Exception as ex:
-        print("Error: ", ex)
+        print("Create table Error: ", ex)
 
 
 def insert_or_update_gorilla(gorilla, connection):
@@ -104,7 +104,7 @@ def insert_or_update_gorilla(gorilla, connection):
         print("Gorilla {} inserted/updated successfully.".format(
             gorilla.identifier))
     except Exception as ex:
-        print("Error: ", ex)
+        print("Insert Gorilla Error: ", ex)
     finally:
         pass
         # connection.close()
@@ -120,7 +120,7 @@ def insert_sibling(gorilla, sibling, connection):
         print("Sibling {} of gorilla {} inserted successfully.".format(
             sibling.identifier, gorilla.identifier))
     except Exception as ex:
-        print("Error: ", ex)
+        print("Insert Sibling Error: ", ex)
     finally:
         pass
         # connection.close()
@@ -136,7 +136,7 @@ def insert_offspring(gorilla, offspring, connection):
         print("Offspring {} of gorilla {} inserted successfully.".format(
             offspring.identifier, gorilla.identifier))
     except Exception as ex:
-        print("Error: ", ex)
+        print("Insert offspring Error: ", ex)
     finally:
         pass
         # connection.close()

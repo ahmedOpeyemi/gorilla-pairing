@@ -53,7 +53,7 @@ def add_zoo(zoo_route):
 
 
 def make_identifier(href, name):
-    name = str(name).strip()
+    name = str(name).strip().replace("'", "").replace("*", "")
     href = str(href).strip()
     return '{}-{}'.format(href, name)
 
@@ -106,7 +106,7 @@ def get_gorilla_info(gorilla_route, save_to_db=True):
             elif sibling.name == 'a' and has_completed_siblings_tag == True:
                 gorilla.offsprings.append(
                     make_identifier(sibling.get(HREF_TAG), sibling.string))
-    print("Gorilla object built, attempting to save ", gorilla)
+    print("Gorilla object built, attempting to save: ", gorilla.identifier)
     if save_to_db:
         insert_or_update_gorilla(gorilla, DB_CONNECTION)
         for sibling_identifier in gorilla.siblings:
@@ -127,6 +127,13 @@ if __name__ == '__main__':
     DB_CONNECTION = get_or_create_connection()
     create_tables(DB_CONNECTION)
     get_all_links("USAmenu.htm", add_zoo)
+    zoo_index = 0
     if len(ALL_ZOOS) > 0:
         for zoo_route in ALL_ZOOS:
+            zoo_index = zoo_index + 1
+            print('''
+
+            Collecting gorilla data from zoo {}: {}
+
+            '''.format(zoo_index, zoo_route))
             get_all_links(zoo_route, get_gorilla_info)

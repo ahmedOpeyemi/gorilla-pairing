@@ -69,42 +69,47 @@ def insert_or_update_gorilla(gorilla, connection):
         record_exist = False
         cursor = connection.cursor()
         cursor.execute(
-            "SELECT COUNT(*) from gorilla where gid={}".format(gorilla.identifier))
+            "SELECT COUNT(*) from gorilla where gid='{}'".format(gorilla.identifier))
         (number_of_rows,) = cursor.fetchone()
         record_exist = number_of_rows > 0
         script = ''
+        print('Record exists: ', record_exist)
         if record_exist:
+            is_alive = None
+            if gorilla.alive:
+                is_alive = 1 if gorilla.alive is True else 0
             script = '''
-                UPDATE gorilla SET (
-                    alive=coalesce(alive, {}),
-                    sex=coalesce(sex, {}),
-                    sire=coalesce(sire, {}),
-                    dam=coalesce(dam, {})
-                )
-                WHERE gid={}
+                UPDATE gorilla SET
+                    alive=IFNULL(alive, '{}'),
+                    sex=IFNULL(sex, '{}'),
+                    sire=IFNULL(sire, '{}'),
+                    dam=IFNULL(dam, '{}')
+
+                WHERE gid='{}'
             '''.format(
-                1 if gorilla['alive'] is True else 0,
-                gorilla.sex,
-                gorilla.sire,
-                gorilla.dam,
+                is_alive or 'null',
+                gorilla.sex or 'null',
+                gorilla.sire or 'null',
+                gorilla.dam or 'null',
                 gorilla.identifier
             )
         else:
             script = '''
                 INSERT INTO gorilla(gid, name, link, alive, sex, sire, dam)
-                VALUES({}, {}, {}, {}, {}, {}, {})
+                VALUES('{}', '{}', '{}', '{}', '{}', '{}', '{}')
             '''.format(
                 gorilla.identifier, gorilla.name,
-                gorilla.link, gorilla.alive,
-                gorilla.sex, gorilla.sire,
-                gorilla.dam
+                gorilla.link, gorilla.alive or 'null',
+                gorilla.sex or 'null', gorilla.sire or 'null',
+                gorilla.dam or 'null'
             )
+        script = script.replace("'null'", 'null')
         cursor.execute(script)
         connection.commit()
         print("Gorilla {} inserted/updated successfully.".format(
             gorilla.identifier))
     except Exception as ex:
-        print("Insert Gorilla Error: ", ex)
+        print("Insert/Update Gorilla Error: ", ex)
     finally:
         pass
         # connection.close()
@@ -114,7 +119,7 @@ def insert_sibling(gorilla, sibling, connection):
     try:
         cursor = connection.cursor()
         cursor.execute('''
-            INSERT INTO siblings(gid, sibling_id) VALUES({}, {})
+            INSERT INTO siblings(gid, sibling_id) VALUES('{}', '{}')
         '''.format(gorilla.identifier, sibling.identifier))
         connection.commit()
         print("Sibling {} of gorilla {} inserted successfully.".format(
@@ -130,7 +135,7 @@ def insert_offspring(gorilla, offspring, connection):
     try:
         cursor = connection.cursor()
         cursor.execute('''
-            INSERT INTO offsprings(gid, offspring_id) VALUES({}, {})
+            INSERT INTO offsprings(gid, offspring_id) VALUES('{}', '{}')
         '''.format(gorilla.identifier, offspring.identifier))
         connection.commit()
         print("Offspring {} of gorilla {} inserted successfully.".format(

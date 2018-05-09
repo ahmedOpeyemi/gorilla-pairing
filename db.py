@@ -55,3 +55,14 @@ def create_tables(connection):
     ]:
         cur.execute(table_script)
 
+
+def insert_or_update_gorilla(gorilla):
+    pass
+
+
+def insert_sibling(gorilla, sibling):
+    pass
+
+
+def insert_offspring(gorilla, offspring):
+    pass

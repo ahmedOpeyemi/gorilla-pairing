@@ -38,7 +38,8 @@ def create_tables(connection):
                 gid TEXT,
                 sibling_id TEXT,
                 FOREIGN KEY(gid) REFERENCES gorilla(gid)
-                FOREIGN KEY(sibling_id) REFERENCES gorilla(gid)
+                FOREIGN KEY(sibling_id) REFERENCES gorilla(gid),
+                UNIQUE(gid, sibling_id)
             )
         '''
 
@@ -48,7 +49,8 @@ def create_tables(connection):
                 gid TEXT,
                 offspring_id TEXT,
                 FOREIGN KEY(gid) REFERENCES gorilla(gid)
-                FOREIGN KEY(offspring_id) REFERENCES gorilla(gid)
+                FOREIGN KEY(offspring_id) REFERENCES gorilla(gid),
+                UNIQUE(gid, offspring_id)
             )
         '''
 
@@ -122,12 +124,19 @@ def insert_or_update_gorilla(gorilla, connection):
 def insert_sibling(gorilla, sibling, connection):
     try:
         cursor = connection.cursor()
-        cursor.execute('''
-            INSERT INTO siblings(gid, sibling_id) VALUES('{}', '{}')
-        '''.format(gorilla.identifier, sibling.identifier))
-        connection.commit()
-        # print("Sibling {} of gorilla {} inserted successfully.".format(
-        #     sibling.identifier, gorilla.identifier))
+        cursor.execute(
+            '''
+            SELECT COUNT(*) from siblings where gid="{}" and sibling_id="{}"
+            '''.format(gorilla.identifier, sibling.identifier))
+        (number_of_rows,) = cursor.fetchone()
+        record_exist = number_of_rows > 0
+        if not record_exist:
+            cursor.execute('''
+                INSERT INTO siblings(gid, sibling_id) VALUES('{}', '{}')
+            '''.format(gorilla.identifier, sibling.identifier))
+            connection.commit()
+            # print("Sibling {} of gorilla {} inserted successfully.".format(
+            #     sibling.identifier, gorilla.identifier))
     except Exception as ex:
         print("Insert Sibling Error: ", ex, gorilla.identifier, sibling.identifier)
     finally:
@@ -138,12 +147,20 @@ def insert_sibling(gorilla, sibling, connection):
 def insert_offspring(gorilla, offspring, connection):
     try:
         cursor = connection.cursor()
-        cursor.execute('''
-            INSERT INTO offsprings(gid, offspring_id) VALUES('{}', '{}')
-        '''.format(gorilla.identifier, offspring.identifier))
-        connection.commit()
-        # print("Offspring {} of gorilla {} inserted successfully.".format(
-        #     offspring.identifier, gorilla.identifier))
+        cursor.execute(
+            '''
+            SELECT COUNT(*) from offsprings where gid="{}" and offspring_id="{}"
+            '''.format(gorilla.identifier, offspring.identifier))
+        (number_of_rows,) = cursor.fetchone()
+        record_exist = number_of_rows > 0
+        if not record_exist:
+            cursor.execute(
+                '''
+                INSERT INTO offsprings(gid, offspring_id) VALUES('{}', '{}')
+                '''.format(gorilla.identifier, offspring.identifier))
+            connection.commit()
+            # print("Offspring {} of gorilla {} inserted successfully.".format(
+            #     offspring.identifier, gorilla.identifier))
     except Exception as ex:
         print("Insert offspring Error: ", ex, gorilla.identifier, offspring.identifier)
     finally:

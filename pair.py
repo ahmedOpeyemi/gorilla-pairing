@@ -39,8 +39,7 @@ def find_best_mates(gorilla):
         'parents': [gorilla.sire, gorilla.dam],
         'grand_children': [],
         'grand_parents': [],
-        'aunts': [],
-        'uncles': [],
+        'aunts_uncles': [],
         'nephews': [],
         'half_siblings': [],
         'first_cousins': [],
@@ -56,6 +55,7 @@ def find_best_mates(gorilla):
                 mate_sex, key, gorilla.identifier
             )
     return relations
+
 
 GENERAL_ERROR = '''
             Error:

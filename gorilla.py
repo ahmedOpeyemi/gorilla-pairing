@@ -24,5 +24,9 @@ class Gorilla:
 
     def __str__(self):
         return '''
-            Name: {}, Sex: {}, Link: {}
-        '''.format(self.name, self.sex, self.link)
+            Name: {}, Sex: {}, Link: {}, Siblings: {}, Offsprings: {}
+        '''.format(
+            self.name, self.sex,
+            self.link, len(self.siblings),
+            len(self.offsprings)
+        )

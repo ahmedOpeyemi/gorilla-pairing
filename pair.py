@@ -42,12 +42,7 @@ def find_best_mates(gorilla):
         'aunts_uncles': [],
         'nephews': [],
         'half_siblings': [],
-        'first_cousins': [],
-        'second_cousins': [],
-        'third_cousins': [],
-        'fourth_cousins': [],
-        'fifth_cousins': [],
-        'sixth_cousins': [],
+        'cousins': [],
     }
     for key, value in relations.items():
         if value == []:

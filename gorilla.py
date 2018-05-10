@@ -21,3 +21,8 @@ class Gorilla:
         self.offsprings = offsprings
         self.sire = sire
         self.dam = dam
+
+    def __str__(self):
+        return '''
+            Name: {}, Sex: {}, Link: {}
+        '''.format(self.name, self.sex, self.link)

@@ -53,7 +53,8 @@ def add_zoo(zoo_route):
 
 
 def make_identifier(href, name):
-    name = str(name).replace("'", "").replace("*", "").replace("½", "").strip().replace(" ", "_")
+    name = str(name).replace("'", "").replace(
+        "*", "").replace("½", "").strip().replace(" ", "_")
     href = str(href).strip()
     return '{}-{}'.format(href, name)
 
@@ -63,7 +64,7 @@ def get_name_link(identifier):
     return halves[0], halves[1]
 
 
-def get_gorilla_info(gorilla_route, save_to_db=True):
+def get_gorilla_info(gorilla_route, with_siblings_and_offsprings=True):
     gorilla = Gorilla(alive=True, link=gorilla_route)
     gorilla_page_dom = BeautifulSoup(getPage(gorilla_route), HTML_PARSER)
     name = (gorilla_page_dom.find_all("font", attrs={"size": 5})[0]).string
@@ -91,36 +92,48 @@ def get_gorilla_info(gorilla_route, save_to_db=True):
     gorilla.sire = get_parent_identifier(FATHER_LABEL)
     gorilla.dam = get_parent_identifier(MOTHER_LABEL)
 
-    siblings_header_tag = gorilla_page_dom.find(
-        text=re.compile("Siblings")).parent.parent
-    siblings_tag = siblings_header_tag.find_next_sibling("p")
-    has_completed_siblings_tag = False
-    if siblings_tag:
-        for sibling in siblings_tag.find_next_siblings():
-            if sibling.name == 'a' and has_completed_siblings_tag == False:
-                gorilla.siblings.append(
-                    make_identifier(sibling.get(HREF_TAG), sibling.string))
-            elif sibling.name == 'font':
-                if len(sibling.find_all(text=re.compile("Offspring"))) > 0:
-                    has_completed_siblings_tag = True
-            elif sibling.name == 'a' and has_completed_siblings_tag == True:
-                gorilla.offsprings.append(
-                    make_identifier(sibling.get(HREF_TAG), sibling.string))
-    # print("Gorilla object built, attempting to save: ", gorilla.identifier, gorilla.link, gorilla.alive)
-    if save_to_db:
-        insert_or_update_gorilla(gorilla, DB_CONNECTION)
-        for sibling_identifier in gorilla.siblings:
-            (href, name) = get_name_link(sibling_identifier)
-            sibling_gorilla = Gorilla(sibling_identifier, name, href)
-            insert_or_update_gorilla(sibling_gorilla, DB_CONNECTION)
-            insert_sibling(gorilla, sibling_gorilla, DB_CONNECTION)
-        # TODO: Duplicate code here, fix.
-        for offspring_identifier in gorilla.offsprings:
-            (href, name) = get_name_link(offspring_identifier)
-            offspring_gorilla = Gorilla(sibling_identifier, name, href)
-            insert_or_update_gorilla(offspring_gorilla, DB_CONNECTION)
-            insert_offspring(gorilla, offspring_gorilla, DB_CONNECTION)
+    if with_siblings_and_offsprings:
+        print('Getting gorilla siblings')
+        siblings_header_tag = gorilla_page_dom.find(
+            text=re.compile("Siblings")).parent.parent
+        siblings_tag = siblings_header_tag.find_next_sibling("p")
+        has_completed_siblings_tag = False
+        if siblings_tag:
+            for sibling in siblings_tag.find_next_siblings():
+                if sibling.name == 'a' and has_completed_siblings_tag is False:
+                    gorilla.siblings.append(
+                        make_identifier(sibling.get(HREF_TAG), sibling.string))
+                elif sibling.name == 'font':
+                    if len(sibling.find_all(text=re.compile("Offspring"))) > 0:
+                        has_completed_siblings_tag = True
+                elif sibling.name == 'a' and has_completed_siblings_tag is True:
+                    gorilla.offsprings.append(
+                        make_identifier(sibling.get(HREF_TAG), sibling.string))
     return gorilla
+
+
+def save_gorilla(gorilla):
+    insert_or_update_gorilla(gorilla, DB_CONNECTION)
+    print("Gorilla object built, attempting to save: ", gorilla.identifier, gorilla.link, gorilla.alive)
+    for sibling_identifier in gorilla.siblings:
+        (href, name) = get_name_link(sibling_identifier)
+        sibling_gorilla = get_gorilla_info(
+            href,
+            with_siblings_and_offsprings=False
+        )
+        insert_or_update_gorilla(sibling_gorilla, DB_CONNECTION)
+        insert_sibling(gorilla, sibling_gorilla, DB_CONNECTION)
+        print("Gorilla siblings saved: ", sibling_gorilla.identifier, gorilla.identifier)
+    # TODO: Duplicate code here, fix.
+    for offspring_identifier in gorilla.offsprings:
+        (href, name) = get_name_link(offspring_identifier)
+        offspring_gorilla = get_gorilla_info(
+                        href,
+                        with_siblings_and_offsprings=False
+                    )
+        insert_or_update_gorilla(offspring_gorilla, DB_CONNECTION)
+        insert_offspring(gorilla, offspring_gorilla, DB_CONNECTION)
+        print("Gorilla offspring saved: ", offspring_gorilla.identifier, gorilla.identifier)
 
 
 if __name__ == '__main__':
@@ -136,4 +149,12 @@ if __name__ == '__main__':
             Collecting gorilla data from zoo {}: {}
 
             '''.format(zoo_index, zoo_route))
-            get_all_links(zoo_route, get_gorilla_info)
+            page_dom = BeautifulSoup(getPage(zoo_route), HTML_PARSER)
+            for link in page_dom.find_all('a'):
+                href = link.get(HREF_TAG)
+                gorilla = get_gorilla_info(
+                    href,
+                    with_siblings_and_offsprings=True
+                )
+                save_gorilla(gorilla)
+

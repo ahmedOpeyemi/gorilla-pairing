@@ -1,3 +1,7 @@
+'''
+Crawl the studbook for all the gorillas in the US region.
+'''
+
 # Third party imports
 from bs4 import BeautifulSoup
 import re

@@ -221,7 +221,8 @@ def get_gorilla(identifier_or_link, with_parents=False,
                 siblings = []
                 for row in cursor:
                     siblings.append(
-                        get_gorilla(row[0])
+                        row[0]
+                        # get_gorilla(row[0])
                     )
                 script = '''
                     SELECT offspring_id FROM offsprings WHERE gid='{}'
@@ -230,7 +231,8 @@ def get_gorilla(identifier_or_link, with_parents=False,
                 offsprings = []
                 for row in cursor:
                     offsprings.append(
-                        get_gorilla(row[0])
+                        row[0]
+                        # get_gorilla(row[0])
                     )
                 gorilla.siblings = siblings
                 gorilla.offsprings = offsprings
@@ -240,3 +242,11 @@ def get_gorilla(identifier_or_link, with_parents=False,
     finally:
         connection.close()
     return gorilla
+
+
+def get_relations(sex, relation_type, gid):
+    print('''
+        Finding {} of {} that are {}
+    '''.format(relation_type, gid, sex))
+
+    pass

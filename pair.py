@@ -7,7 +7,8 @@ import sys
 
 # Local imports
 from db import (
-    get_gorilla
+    get_gorilla,
+    get_relations
 )
 
 
@@ -30,7 +31,29 @@ def find_best_mates(gorilla):
             b. for all the identified relatives, assign the percentages to them.
             c. for all the non relatives, add them to a list.
     '''
-    pass
+    mate_sex = 'F' if gorilla.sex == 'M' else 'M'
+    relations = {
+        'siblings': gorilla.siblings,
+        'children': gorilla.offsprings,
+        'parents': [gorilla.sire, gorilla.dam],
+        'grand_children': [],
+        'grand_parents': [],
+        'aunts': [],
+        'uncles': [],
+        'nephews': [],
+        'half_siblings': [],
+        'first_cousins': [],
+        'second_cousins': [],
+        'third_cousins': [],
+        'fourth_cousins': [],
+        'fifth_cousins': [],
+        'sixth_cousins': [],
+    }
+    for key, value in relations:
+        if value == []:
+            relations[key] = get_relations(
+                mate_sex, key, gorilla.identifier
+            )
 
 
 GENERAL_ERROR = '''
@@ -55,7 +78,6 @@ if __name__ == '__main__':
         elif identifier_or_key is not None:
             gorilla = get_gorilla(
                 identifier_or_key,
-                with_parents=True,
                 with_siblings_and_offsprings=True
             )
             if gorilla is not None:

@@ -7,15 +7,23 @@ import sqlite3
 import os
 
 # Local imports
-# - N/A
+from gorilla import Gorilla
 
 DATABASE_PATH = 'gorilla.db'
+# TABLES = {
+#     'GORILLA': 'gorilla',
+#     'OFFSPRINGS': 'offsprings',
+#     'SIBLINGS': 'siblings'
+# }
 
 
-def get_or_create_connection(db_path=DATABASE_PATH, destroy_if_exists=False):
-    if destroy_if_exists is True:
-        if os.path.exists(db_path):
-            os.remove(db_path)
+def get_or_create_connection(db_path=DATABASE_PATH,
+                             fail_if_db_doesnt_exist=False):
+    if fail_if_db_doesnt_exist is True:
+        if not os.path.exists(db_path):
+            raise Exception('''
+                Database does not exist, do you want to run fetch.py first?
+                ''')
     return sqlite3.connect(db_path)
 
 
@@ -76,7 +84,8 @@ def insert_or_update_gorilla(gorilla, connection):
         record_exist = False
         cursor = connection.cursor()
         cursor.execute(
-            "SELECT COUNT(*) from gorilla where gid='{}'".format(gorilla.identifier))
+            "SELECT COUNT(*) from gorilla where gid='{}'".format(
+                gorilla.identifier))
         (number_of_rows,) = cursor.fetchone()
         record_exist = number_of_rows > 0
         script = ''
@@ -109,7 +118,8 @@ def insert_or_update_gorilla(gorilla, connection):
                 VALUES('{}', '{}', '{}', '{}', '{}', '{}', '{}')
             '''.format(
                 gorilla.identifier, gorilla.name.replace("'", ""),
-                gorilla.link or 'null', 'null' if is_alive is None else is_alive,
+                gorilla.link or 'null', (
+                    'null' if is_alive is None else is_alive),
                 gorilla.sex or 'null', gorilla.sire or 'null',
                 gorilla.dam or 'null'
             )
@@ -142,7 +152,8 @@ def insert_sibling(gorilla, sibling, connection):
             # print("Sibling {} of gorilla {} inserted successfully.".format(
             #     sibling.identifier, gorilla.identifier))
     except Exception as ex:
-        print("Insert Sibling Error: ", ex, gorilla.identifier, sibling.identifier)
+        print("Insert Sibling Error: ", ex,
+              gorilla.identifier, sibling.identifier)
     finally:
         pass
         # connection.close()
@@ -153,7 +164,8 @@ def insert_offspring(gorilla, offspring, connection):
         cursor = connection.cursor()
         cursor.execute(
             '''
-            SELECT COUNT(*) from offsprings where gid="{}" and offspring_id="{}"
+            SELECT COUNT(*) from offsprings where
+            gid="{}" and offspring_id="{}"
             '''.format(gorilla.identifier, offspring.identifier))
         (number_of_rows,) = cursor.fetchone()
         record_exist = number_of_rows > 0
@@ -166,11 +178,62 @@ def insert_offspring(gorilla, offspring, connection):
             # print("Offspring {} of gorilla {} inserted successfully.".format(
             #     offspring.identifier, gorilla.identifier))
     except Exception as ex:
-        print("Insert offspring Error: ", ex, gorilla.identifier, offspring.identifier)
+        print("Insert offspring Error: ", ex,
+              gorilla.identifier, offspring.identifier)
     finally:
         pass
         # connection.close()
 
 
-def get_gorilla(identifier_or_link):
-    pass
+def get_gorilla(identifier_or_link, with_parents=False,
+                with_siblings_and_offsprings=False,
+                fail_if_dead=True,
+                connection=None):
+    if not connection:
+        connection = get_or_create_connection(fail_if_db_doesnt_exist=True)
+    gorilla = None
+    try:
+        cursor = connection.cursor()
+        script = '''
+            SELECT * FROM gorilla WHERE gid='{0}' OR link='{0} LIMIT 1'
+        '''.format(identifier_or_link)
+        cursor.execute(script)
+
+        for row in cursor:
+            gorilla = Gorilla(
+                identifier=row[1],
+                name=row[2],
+                link=row[3],
+                alive=row[4] == 1,
+                sex=row[5],
+                sire=get_gorilla(row[6]) if with_parents is True else row[6],
+                dam=get_gorilla(row[7]) if with_parents is True else row[7]
+            )
+        if fail_if_dead and gorilla.alive is False:
+            return gorilla
+        if with_siblings_and_offsprings and gorilla is not None:
+            script = '''
+                SELECT sibling_id FROM siblings WHERE gid='{}'
+            '''.format(gorilla.identifier)
+            cursor.execute(script)
+            siblings = []
+            for row in cursor:
+                siblings.append(
+                    get_gorilla(row[0])
+                )
+            script = '''
+                SELECT offspring_id FROM offsprings WHERE gid='{}'
+            '''.format(gorilla.identifier)
+            cursor.execute(script)
+            offsprings = []
+            for row in cursor:
+                offsprings.append(
+                    get_gorilla(row[0])
+                )
+            gorilla.siblings = siblings
+            gorilla.offsprings = offsprings
+    except Exception as ex:
+        print("Error trying to get gorilla record: ", ex)
+    finally:
+        connection.close()
+    return gorilla

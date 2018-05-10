@@ -39,6 +39,10 @@ if __name__ == '__main__':
         # Run for all gorillas
         pass
     else:
-        gorilla = get_gorilla(args[0])
+        gorilla = get_gorilla(
+            args[0],
+            with_parents=True,
+            with_siblings_and_offsprings=True
+        )
         mates = find_best_mates(gorilla)
-        print('Mates >>', mates)
+        print('Mate(s) >>', mates)

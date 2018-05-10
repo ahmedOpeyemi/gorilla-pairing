@@ -102,7 +102,7 @@ def insert_or_update_gorilla(gorilla, connection):
                 INSERT INTO gorilla(gid, name, link, alive, sex, sire, dam)
                 VALUES('{}', '{}', '{}', '{}', '{}', '{}', '{}')
             '''.format(
-                gorilla.identifier, gorilla.name,
+                gorilla.identifier, gorilla.name.replace("'", ""),
                 gorilla.link or 'null', 'null' if is_alive is None else is_alive,
                 gorilla.sex or 'null', gorilla.sire or 'null',
                 gorilla.dam or 'null'

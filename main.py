@@ -53,7 +53,7 @@ def add_zoo(zoo_route):
 
 
 def make_identifier(href, name):
-    name = str(name).replace("'", "").replace("*", "").strip().replace(" ", "_")
+    name = str(name).replace("'", "").replace("*", "").replace("½", "").strip().replace(" ", "_")
     href = str(href).strip()
     return '{}-{}'.format(href, name)
 

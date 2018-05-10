@@ -15,6 +15,7 @@ from db import (
     insert_offspring,
     insert_sibling
 )
+from gorilla import Gorilla
 
 HTML_PARSER = 'html.parser'
 ALL_ZOOS = []
@@ -27,20 +28,6 @@ MOTHER_LABEL = "Dam"
 HREF_TAG = 'href'
 
 DB_CONNECTION = None
-
-
-class Gorilla:
-    def __init__(self, identifier=None, name=None, link=None, alive=None,
-                 sex=None, siblings=[], offsprings=[], sire=None, dam=None):
-        self.identifier = identifier
-        self.name = name
-        self.link = link
-        self.alive = alive
-        self.sex = sex
-        self.siblings = siblings
-        self.offsprings = offsprings
-        self.sire = sire
-        self.dam = dam
 
 
 def get_all_links(page_route, each_link_callback=None):

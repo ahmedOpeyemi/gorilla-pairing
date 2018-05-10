@@ -1,3 +1,7 @@
+'''
+Handles all CRUD operations
+'''
+
 # 3rd party imports
 import sqlite3
 import os
@@ -166,3 +170,7 @@ def insert_offspring(gorilla, offspring, connection):
     finally:
         pass
         # connection.close()
+
+
+def get_gorilla(identifier_or_link):
+    pass

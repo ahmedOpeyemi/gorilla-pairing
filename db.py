@@ -8,7 +8,11 @@ import os
 
 # Local imports
 from gorilla import Gorilla
-from mate_queries import build_query
+from mate_queries import (
+    build_query,
+    build_cousin_query,
+    build_grandparent_query
+)
 
 DATABASE_PATH = 'gorilla.db'
 # TABLES = {
@@ -246,15 +250,31 @@ def get_gorilla(identifier_or_link, with_parents=False,
 
 def get_relations(sex, relation_type, gid, connection=None):
     print('''Finding {} of {} that are {}'''.format(relation_type, gid, sex))
-    queries = build_query(gid, sex)
-    relation_identifiers = []
-    if relation_type in queries:
+
+    def execute_query(query, connection):
         if not connection:
             connection = get_or_create_connection(fail_if_db_doesnt_exist=True)
         cursor = connection.cursor()
-        cursor.execute(queries[relation_type])
+        return cursor.execute(query)
 
+    queries = build_query(gid, sex)
+    relation_identifiers = []
+    query = None
+    if relation_type in queries:
+        query = queries[relation_type]
+        cursor = execute_query(query, connection)
         for row in cursor:
             relation_identifiers.append(row[0])
-
+    if query is None and relation_type == "cousins":
+        for i in range(5):  # Max cousin level.
+            query = build_cousin_query(
+                level=i,
+                grandparents_query=build_grandparent_query(
+                    level=i, offspring_id=gid
+                )
+            )
+            cursor = execute_query(query, connection)
+            relation_identifiers.append([])
+            for row in cursor:
+                relation_identifiers[i].append(row[0])
     return relation_identifiers

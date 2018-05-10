@@ -25,5 +25,37 @@ def build_query(gid, sex):
                 SELECT {0} FROM gorilla a WHERE a.gid=(
                     SELECT {0} FROM gorilla b WHERE b.gid='{1}'
                 )
-        '''.format(parent_label, gid)
+        '''.format(parent_label, gid),
+        'aunts_uncles': '''
+            SELECT sibling_id FROM siblings a
+            LEFT JOIN gorilla c ON (a.sibling_id = c.gid OR a.gid = c.gid)
+            WHERE (
+                a.gid=(
+                    SELECT sire FROM gorilla WHERE gid='{0}'
+                ) OR a.gid=(
+                    SELECT dam FROM gorilla WHERE gid='{0}'
+                )
+            ) AND (c.sex='{1}')
+        '''.format(gid, sex),
+        'nephews': '''
+            SELECT offspring_id FROM offsprings b
+            LEFT JOIN gorilla c ON b.offspring_id = c.gid
+            WHERE b.gid IN (
+                 SELECT sibling_id FROM siblings a WHERE a.gid='{0}'
+            ) AND c.sex='{1}'
+        '''.format(gid, sex),
+        'half_siblings': '''
+            SELECT sibling_id FROM siblings a
+            LEFT JOIN gorilla c ON a.sibling_id = c.gid
+            WHERE a.gid='{0}' AND (
+                c.sire <> (
+                    SELECT sire FROM gorilla WHERE gid='{0}'
+                ) OR c.dam <> (
+                    SELECT dam FROM gorilla WHERE gid='{0}'
+                )
+            ) AND c.sex='{1}'
+        '''.format(gid, sex),
+        '': '''
+
+        ''',
     }

@@ -32,17 +32,41 @@ def find_best_mates(gorilla):
     '''
     pass
 
+GENERAL_ERROR = '''
+            Error:
+            Unrecognized argument supplied, please supply
+            gorilla identifier or link or "all" to run the pairing
+            for all gorillas in the database.
+        '''
+
 
 if __name__ == '__main__':
-    args = sys.argv[:1]
-    if 'all' in args:
-        # Run for all gorillas
-        pass
-    else:
-        gorilla = get_gorilla(
-            args[0],
-            with_parents=True,
-            with_siblings_and_offsprings=True
-        )
-        mates = find_best_mates(gorilla)
-        print('Mate(s) >>', mates)
+    try:
+        args = sys.argv
+        identifier_or_key = args[1]
+        if len(args) < 1 or identifier_or_key == __file__:
+            print(GENERAL_ERROR)
+            exit()
+
+        if 'all' in args:
+            # Run for all gorillas
+            pass
+        elif identifier_or_key is not None:
+            gorilla = get_gorilla(
+                identifier_or_key,
+                with_parents=True,
+                with_siblings_and_offsprings=True
+            )
+            # print("Gorilla: ", gorilla)
+            # print("Gorilla Sire ", gorilla.sire)
+            # print("Gorilla Dam ", gorilla.dam)
+            # print("Gorilla Offsprings ", gorilla.offsprings)
+            # print("Gorilla Siblings ", gorilla.siblings)
+
+            # mates = find_best_mates(gorilla)
+            # print('Mate(s) >>', mates)
+        else:
+            print(GENERAL_ERROR)
+    except Exception as ex:
+        print(ex)
+        print(GENERAL_ERROR)

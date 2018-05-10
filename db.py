@@ -5,6 +5,7 @@ Handles all CRUD operations
 # 3rd party imports
 import sqlite3
 import os
+import traceback
 
 # Local imports
 from gorilla import Gorilla
@@ -195,7 +196,7 @@ def get_gorilla(identifier_or_link, with_parents=False,
     try:
         cursor = connection.cursor()
         script = '''
-            SELECT * FROM gorilla WHERE gid='{0}' OR link='{0} LIMIT 1'
+            SELECT * FROM gorilla WHERE gid='{0}' OR link='{0}' LIMIT 1
         '''.format(identifier_or_link)
         cursor.execute(script)
 
@@ -209,31 +210,33 @@ def get_gorilla(identifier_or_link, with_parents=False,
                 sire=get_gorilla(row[6]) if with_parents is True else row[6],
                 dam=get_gorilla(row[7]) if with_parents is True else row[7]
             )
-        if fail_if_dead and gorilla.alive is False:
-            return gorilla
-        if with_siblings_and_offsprings and gorilla is not None:
-            script = '''
-                SELECT sibling_id FROM siblings WHERE gid='{}'
-            '''.format(gorilla.identifier)
-            cursor.execute(script)
-            siblings = []
-            for row in cursor:
-                siblings.append(
-                    get_gorilla(row[0])
-                )
-            script = '''
-                SELECT offspring_id FROM offsprings WHERE gid='{}'
-            '''.format(gorilla.identifier)
-            cursor.execute(script)
-            offsprings = []
-            for row in cursor:
-                offsprings.append(
-                    get_gorilla(row[0])
-                )
-            gorilla.siblings = siblings
-            gorilla.offsprings = offsprings
+        if gorilla is not None:
+            if fail_if_dead and gorilla.alive is False:
+                return gorilla
+            if with_siblings_and_offsprings:
+                script = '''
+                    SELECT sibling_id FROM siblings WHERE gid='{}'
+                '''.format(gorilla.identifier)
+                cursor.execute(script)
+                siblings = []
+                for row in cursor:
+                    siblings.append(
+                        get_gorilla(row[0])
+                    )
+                script = '''
+                    SELECT offspring_id FROM offsprings WHERE gid='{}'
+                '''.format(gorilla.identifier)
+                cursor.execute(script)
+                offsprings = []
+                for row in cursor:
+                    offsprings.append(
+                        get_gorilla(row[0])
+                    )
+                gorilla.siblings = siblings
+                gorilla.offsprings = offsprings
     except Exception as ex:
         print("Error trying to get gorilla record: ", ex)
+        traceback.print_exc()
     finally:
         connection.close()
     return gorilla

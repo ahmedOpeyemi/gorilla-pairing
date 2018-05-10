@@ -3,10 +3,43 @@ Queries for all the relation types.
 '''
 
 # Third party imports
-# - N/A
+import string
 
 # Local imports
 # - N/A
+
+
+def get_alphabet(number):
+    d = dict(enumerate(string.ascii_lowercase, 1))
+    return d[number]
+
+
+def build_grandparent_query(level, offspring_id):
+    return_string = '''
+        SELECT gid FROM offsprings off WHERE off.offspring_id='{0}'
+    '''.format(offspring_id)
+    for i in range(level):
+        return_string = '''
+            SELECT gid FROM offsprings {0} WHERE {0}.offspring_id IN
+            (
+                {1}
+            )
+        '''.format(get_alphabet(i + 1), return_string)
+    return return_string
+
+
+def build_cousin_query(level, grandparents_query):
+    return_string = '''
+        SELECT offspring_id FROM offsprings grand WHERE grand.gid IN ({0})
+    '''.format(grandparents_query)
+    for i in range(level):
+        return_string = '''
+            SELECT offspring_id FROM offsprings {0} WHERE {0}.gid IN
+            (
+                {1}
+            )
+        '''.format(get_alphabet(i + 1), return_string)
+    return return_string
 
 
 def build_query(gid, sex):
@@ -54,8 +87,5 @@ def build_query(gid, sex):
                     SELECT dam FROM gorilla WHERE gid='{0}'
                 )
             ) AND c.sex='{1}'
-        '''.format(gid, sex),
-        '': '''
-
-        ''',
+        '''.format(gid, sex)
     }

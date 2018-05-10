@@ -8,6 +8,7 @@ import os
 
 # Local imports
 from gorilla import Gorilla
+from mate_queries import build_query
 
 DATABASE_PATH = 'gorilla.db'
 # TABLES = {
@@ -243,6 +244,17 @@ def get_gorilla(identifier_or_link, with_parents=False,
     return gorilla
 
 
-def get_relations(sex, relation_type, gid):
+def get_relations(sex, relation_type, gid, connection=None):
     print('''Finding {} of {} that are {}'''.format(relation_type, gid, sex))
-    return []
+    queries = build_query(gid, sex)
+    relation_identifiers = []
+    if relation_type in queries:
+        if not connection:
+            connection = get_or_create_connection(fail_if_db_doesnt_exist=True)
+        cursor = connection.cursor()
+        cursor.execute(queries[relation_type])
+
+        for row in cursor:
+            relation_identifiers.append(row[0])
+
+    return relation_identifiers

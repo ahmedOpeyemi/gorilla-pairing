@@ -4,6 +4,7 @@ Pairs one or more gorillas with suitable mate(s)
 
 # Third party imports
 import sys
+import traceback
 
 # Local imports
 from db import (
@@ -49,12 +50,12 @@ def find_best_mates(gorilla):
         'fifth_cousins': [],
         'sixth_cousins': [],
     }
-    for key, value in relations:
+    for key, value in relations.items():
         if value == []:
             relations[key] = get_relations(
                 mate_sex, key, gorilla.identifier
             )
-
+    return relations
 
 GENERAL_ERROR = '''
             Error:
@@ -87,12 +88,13 @@ if __name__ == '__main__':
                     '''.format(gorilla.identifier))
                     quit()
                 print('''
-                    Finding mates for {}'.format(gorilla.identifier)
-                ''')
+                    Finding mates for {}
+                '''.format(gorilla.identifier))
                 mates = find_best_mates(gorilla)
                 print('Mate(s) >>', mates)
         else:
             print(GENERAL_ERROR)
     except Exception as ex:
         print(ex)
+        traceback.print_exc()
         print(GENERAL_ERROR)

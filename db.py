@@ -5,7 +5,6 @@ Handles all CRUD operations
 # 3rd party imports
 import sqlite3
 import os
-import traceback
 
 # Local imports
 from gorilla import Gorilla
@@ -238,15 +237,12 @@ def get_gorilla(identifier_or_link, with_parents=False,
                 gorilla.offsprings = offsprings
     except Exception as ex:
         print("Error trying to get gorilla record: ", ex)
-        traceback.print_exc()
+
     finally:
         connection.close()
     return gorilla
 
 
 def get_relations(sex, relation_type, gid):
-    print('''
-        Finding {} of {} that are {}
-    '''.format(relation_type, gid, sex))
-
-    pass
+    print('''Finding {} of {} that are {}'''.format(relation_type, gid, sex))
+    return []

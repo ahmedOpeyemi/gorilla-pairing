@@ -9,7 +9,8 @@ import traceback
 # Local imports
 from db import (
     get_gorilla,
-    get_relations
+    get_relations,
+    get_non_relations
 )
 
 
@@ -81,10 +82,23 @@ def find_best_mates(gorilla):
             relations[key] = get_relations(
                 mate_sex, key, gorilla.identifier
             )
-
+    print('''
+        Relations: {}
+    '''.format(relations))
     relations = assign_percentages_to_mates(relations)
-    # Select all gorillas of the opposite sex that are not relations
-    #   Assign 0% to them, concat them with relations, sort by percentages.
+    print('Number of relations: {}'.format(len(relations)))
+    non_relations = get_non_relations(
+        mate_sex,
+        gorilla.identifier,
+        list(relations.keys())
+    )
+    print('Number of non-relations: {}'.format(len(non_relations)))
+    for non_relation in non_relations:
+        relations[non_relation] = 0
+    print('''
+        Selected mates with percentages: {}
+    '''.format(relations))
+
     return relations
 
 
@@ -122,7 +136,6 @@ if __name__ == '__main__':
                     Finding mates for {}
                 '''.format(gorilla.identifier))
                 mates = find_best_mates(gorilla)
-                print('Mate(s) >>', mates)
         else:
             print(GENERAL_ERROR)
     except Exception as ex:

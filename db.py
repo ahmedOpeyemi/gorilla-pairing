@@ -269,7 +269,7 @@ def get_relations(sex, relation_type, gid, connection=None):
         for row in cursor:
             relation_identifiers.append(row[0])
     if query is None and relation_type == "cousins":
-        for i in range(5):  # Max cousin level.
+        for i in range(6):  # Max cousin level = 6
             query = build_cousin_query(
                 level=i,
                 grandparents_query=build_grandparent_query(

@@ -281,7 +281,8 @@ def get_relations(sex, relation_type, gid, connection=None):
             cursor = execute_query(query, connection)
             relation_identifiers.append([])
             for row in cursor:
-                relation_identifiers[i].append(row[0])
+                if row[0] != gid:  # TODO: This should be in the query.
+                    relation_identifiers[i].append(row[0])
     return relation_identifiers
 
 

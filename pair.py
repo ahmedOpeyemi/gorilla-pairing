@@ -13,6 +13,28 @@ from db import (
 )
 
 
+def get_relation_percetages(relation_type):
+    relation_percentages = {
+        'siblings': 50,
+        'children': 50,
+        'parents': 50,
+        'grand_children': 25,
+        'grand_parents': 25,
+        'aunts_uncles': 25,
+        'nephews': 25,
+        'half_siblings': 25,
+        'cousins': [12.5, 3.13, 0.78, 0.20, 0.05, 0.01],
+        'cousins_once_removed': [6.25, 1.5]
+    }
+    if relation_type in relation_percentages:
+        return relation_percentages[relation_type]
+    else:
+        return 0
+
+
+def assign_percentages_to_mates(mates):
+    pass
+
 def find_best_mates(gorilla):
     '''
         1. Check if gorilla is alive, if no quit.
@@ -49,6 +71,8 @@ def find_best_mates(gorilla):
             relations[key] = get_relations(
                 mate_sex, key, gorilla.identifier
             )
+    # Select all gorillas of the opposite sex that are not relations
+    #   Assign 0% to them, concat them with relations, sort by percentages.
     return relations
 
 

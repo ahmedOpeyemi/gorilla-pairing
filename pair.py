@@ -33,7 +33,17 @@ def get_relation_percetages(relation_type):
 
 
 def assign_percentages_to_mates(mates):
-    pass
+    return_obj = {}
+    for key, value in mates.items():
+        if key != "cousins":
+            for relation in value:
+                return_obj[relation] = get_relation_percetages(key)
+        else:
+            for idx, cousins in enumerate(value):
+                for cousin in cousins:
+                    return_obj[cousin] = get_relation_percetages(key)[idx]
+    return return_obj
+
 
 def find_best_mates(gorilla):
     '''
@@ -71,6 +81,8 @@ def find_best_mates(gorilla):
             relations[key] = get_relations(
                 mate_sex, key, gorilla.identifier
             )
+
+    relations = assign_percentages_to_mates(relations)
     # Select all gorillas of the opposite sex that are not relations
     #   Assign 0% to them, concat them with relations, sort by percentages.
     return relations

@@ -95,6 +95,7 @@ def find_best_mates(gorilla):
     print('Number of non-relations: {}'.format(len(non_relations)))
     for non_relation in non_relations:
         relations[non_relation] = 0
+    relations.pop(gorilla.identifier, None)
     print('''
         Selected mates with percentages: {}
     '''.format(relations))

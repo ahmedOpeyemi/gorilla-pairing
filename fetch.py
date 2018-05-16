@@ -12,8 +12,8 @@ from db import (
     create_tables,
     get_or_create_connection,
     insert_or_update_gorilla,
-    insert_offspring,
-    insert_sibling
+    insert_offsprings,
+    insert_siblings
 )
 from gorilla import Gorilla
 
@@ -56,7 +56,10 @@ def get_name_link(identifier):
 
 
 def get_gorilla_info(gorilla_route, with_siblings_and_offsprings=True):
-    gorilla = Gorilla(alive=True, link=gorilla_route)
+    gorilla = Gorilla(
+        alive=True, link=gorilla_route,
+        siblings=[], offsprings=[]
+    )
     gorilla_page_dom = BeautifulSoup(getPage(gorilla_route), HTML_PARSER)
     name = (gorilla_page_dom.find_all("font", attrs={"size": 5})[0]).string
     gorilla.name = name
@@ -84,7 +87,7 @@ def get_gorilla_info(gorilla_route, with_siblings_and_offsprings=True):
     gorilla.dam = get_parent_identifier(MOTHER_LABEL)
 
     if with_siblings_and_offsprings:
-        print('Getting gorilla siblings')
+        print('Getting gorilla siblings for {}'.format(gorilla.name))
         siblings_header_tag = gorilla_page_dom.find(
             text=re.compile("Siblings")).parent.parent
         siblings_tag = siblings_header_tag.find_next_sibling("p")
@@ -105,26 +108,37 @@ def get_gorilla_info(gorilla_route, with_siblings_and_offsprings=True):
 
 def save_gorilla(gorilla):
     insert_or_update_gorilla(gorilla, DB_CONNECTION)
-    print("Gorilla object built, attempting to save: ", gorilla.identifier, gorilla.link, gorilla.alive)
-    for sibling_identifier in gorilla.siblings:
-        (href, name) = get_name_link(sibling_identifier)
-        sibling_gorilla = get_gorilla_info(
-            href,
-            with_siblings_and_offsprings=False
+    print("Gorilla object built, attempting to save: ",
+          gorilla.identifier, gorilla.link)
+    print("Gorilla has {} siblings".format(len(gorilla.siblings)))
+    if len(gorilla.siblings) > 0:
+        sibling_gorillas = []
+        for sibling_identifier in gorilla.siblings:
+            (href, name) = get_name_link(sibling_identifier)
+            sibling_gorilla = get_gorilla_info(
+                href,
+                with_siblings_and_offsprings=False
+            )
+            insert_or_update_gorilla(sibling_gorilla, DB_CONNECTION)
+            sibling_gorillas.append(sibling_gorilla)
+        insert_siblings(gorilla, sibling_gorillas, DB_CONNECTION)
+        print(
+            "{} gorilla siblings saved".format(len(sibling_gorillas))
         )
-        insert_or_update_gorilla(sibling_gorilla, DB_CONNECTION)
-        insert_sibling(gorilla, sibling_gorilla, DB_CONNECTION)
-        print("Gorilla siblings saved: ", sibling_gorilla.identifier, gorilla.identifier)
     # TODO: Duplicate code here, fix.
-    for offspring_identifier in gorilla.offsprings:
-        (href, name) = get_name_link(offspring_identifier)
-        offspring_gorilla = get_gorilla_info(
-                        href,
-                        with_siblings_and_offsprings=False
-                    )
-        insert_or_update_gorilla(offspring_gorilla, DB_CONNECTION)
-        insert_offspring(gorilla, offspring_gorilla, DB_CONNECTION)
-        print("Gorilla offspring saved: ", offspring_gorilla.identifier, gorilla.identifier)
+    print("Gorilla has {} offsprings".format(len(gorilla.offsprings)))
+    if (len(gorilla.offsprings) > 0):
+        offspring_gorillas = []
+        for offspring_identifier in gorilla.offsprings:
+            (href, name) = get_name_link(offspring_identifier)
+            offspring_gorilla = get_gorilla_info(
+                href,
+                with_siblings_and_offsprings=False
+            )
+            insert_or_update_gorilla(offspring_gorilla, DB_CONNECTION)
+            offspring_gorillas.append(offspring_gorilla)
+        insert_offsprings(gorilla, offspring_gorillas, DB_CONNECTION)
+        print("{} gorilla offsprings saved: ".format(len(offspring_gorillas)))
 
 
 if __name__ == '__main__':
@@ -148,4 +162,3 @@ if __name__ == '__main__':
                     with_siblings_and_offsprings=True
                 )
                 save_gorilla(gorilla)
-

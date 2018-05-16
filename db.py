@@ -251,14 +251,16 @@ def get_gorilla(identifier_or_link, with_parents=False,
     return gorilla
 
 
-def get_relations(sex, relation_type, gid, connection=None):
-    print('''Finding {} of {} that are {}'''.format(relation_type, gid, sex))
-
-    def execute_query(query, connection):
+# TODO: Make use of this a util.
+def execute_query(query, connection):
         if not connection:
             connection = get_or_create_connection(fail_if_db_doesnt_exist=True)
         cursor = connection.cursor()
         return cursor.execute(query)
+
+
+def get_relations(sex, relation_type, gid, connection=None):
+    print('''Finding {} of {} that are {}'''.format(relation_type, gid, sex))
 
     queries = build_query(gid, sex)
     relation_identifiers = []
@@ -281,3 +283,16 @@ def get_relations(sex, relation_type, gid, connection=None):
             for row in cursor:
                 relation_identifiers[i].append(row[0])
     return relation_identifiers
+
+
+def get_non_relations(sex, gid, relations, connection=None):
+    non_relations = []
+    print(''' Finding non relations of {} '''.format(gid))
+    query = '''
+        SELECT gid FROM gorilla WHERE (
+            alive = '{0}' AND sex = '{1}' AND gid NOT IN ({2})
+        )
+    '''.format(1, sex, ','.join('"{0}"'.format(r) for r in relations))
+    cursor = execute_query(query, connection)
+    non_relations = [row[0] for row in cursor]
+    return non_relations

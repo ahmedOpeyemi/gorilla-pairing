@@ -5,6 +5,7 @@ Handles all CRUD operations
 # 3rd party imports
 import sqlite3
 import os
+import traceback
 
 # Local imports
 from gorilla import Gorilla
@@ -84,16 +85,7 @@ def create_tables(connection):
 
 
 def insert_or_update_gorilla(gorilla, connection):
-    # TODO: clean up some redundant checks here.
     try:
-        record_exist = False
-        cursor = connection.cursor()
-        cursor.execute(
-            "SELECT COUNT(*) from gorilla where gid='{}'".format(
-                gorilla.identifier))
-        (number_of_rows,) = cursor.fetchone()
-        record_exist = number_of_rows > 0
-        script = ''
         # print('Record exists: ', record_exist)
         is_alive = None
         if gorilla.alive is True:
@@ -101,33 +93,25 @@ def insert_or_update_gorilla(gorilla, connection):
         elif gorilla.alive is False:
             is_alive = 0
 
-        if record_exist:
-            script = '''
-                UPDATE gorilla SET
-                    alive=IFNULL(alive, '{}'),
-                    sex=IFNULL(sex, '{}'),
-                    sire=IFNULL(sire, '{}'),
-                    dam=IFNULL(dam, '{}')
-
-                WHERE gid='{}'
-            '''.format(
-                'null' if is_alive is None else is_alive,
-                gorilla.sex or 'null',
-                gorilla.sire or 'null',
-                gorilla.dam or 'null',
-                gorilla.identifier
-            )
-        else:
-            script = '''
-                INSERT INTO gorilla(gid, name, link, alive, sex, sire, dam)
-                VALUES('{}', '{}', '{}', '{}', '{}', '{}', '{}')
-            '''.format(
+        script = '''
+        INSERT OR REPLACE INTO gorilla
+        (gid, name, link, alive, sex, sire, dam)
+        VALUES (
+            '{0}', '{1}', '{2}',
+            COALESCE((SELECT alive FROM gorilla WHERE gid='{0}'), '{3}'),
+            COALESCE((SELECT sex FROM gorilla WHERE gid='{0}'), '{4}'),
+            COALESCE((SELECT sire FROM gorilla WHERE gid='{0}'), '{5}'),
+            COALESCE((SELECT dam FROM gorilla WHERE gid='{0}'), '{6}')
+        )
+        '''.format(
                 gorilla.identifier, gorilla.name.replace("'", ""),
                 gorilla.link or 'null', (
                     'null' if is_alive is None else is_alive),
                 gorilla.sex or 'null', gorilla.sire or 'null',
                 gorilla.dam or 'null'
             )
+
+        cursor = connection.cursor()
         script = script.replace("'null'", 'null')
         cursor.execute(script)
         connection.commit()
@@ -140,51 +124,70 @@ def insert_or_update_gorilla(gorilla, connection):
         # connection.close()
 
 
-def insert_sibling(gorilla, sibling, connection):
+def insert_siblings(gorilla, siblings, connection):
+    for sibling in siblings:
+        insert_sibling(gorilla, sibling, connection, False)
+    connection.commit()
+
+
+def insert_sibling(gorilla, sibling, connection, commit_on_insert=True):
     try:
         cursor = connection.cursor()
         cursor.execute(
             '''
-            SELECT COUNT(*) from siblings where gid="{}" and sibling_id="{}"
+            SELECT COUNT(*) FROM siblings WHERE
+            (gid="{0}" and sibling_id="{1}")
+            OR (sibling_id="{0}" and gid="{1}")
             '''.format(gorilla.identifier, sibling.identifier))
         (number_of_rows,) = cursor.fetchone()
         record_exist = number_of_rows > 0
         if not record_exist:
             cursor.execute('''
-                INSERT INTO siblings(gid, sibling_id) VALUES('{}', '{}')
+                INSERT INTO siblings(gid, sibling_id) VALUES('{0}', '{1}')
             '''.format(gorilla.identifier, sibling.identifier))
-            connection.commit()
+            if commit_on_insert:
+                connection.commit()
             # print("Sibling {} of gorilla {} inserted successfully.".format(
             #     sibling.identifier, gorilla.identifier))
     except Exception as ex:
         print("Insert Sibling Error: ", ex,
               gorilla.identifier, sibling.identifier)
+        traceback.print_exc()
     finally:
         pass
         # connection.close()
 
 
-def insert_offspring(gorilla, offspring, connection):
+def insert_offsprings(gorilla, offsprings, connection):
+    for offspring in offsprings:
+        insert_offspring(gorilla, offspring, connection, False)
+    connection.commit()
+
+
+def insert_offspring(gorilla, offspring, connection, commit_on_insert=True):
     try:
         cursor = connection.cursor()
         cursor.execute(
             '''
-            SELECT COUNT(*) from offsprings where
-            gid="{}" and offspring_id="{}"
+            SELECT COUNT(*) FROM offsprings WHERE
+            (gid="{0}" and offspring_id="{1}")
+            OR (offspring_id="{0}" and gid="{1}")
             '''.format(gorilla.identifier, offspring.identifier))
         (number_of_rows,) = cursor.fetchone()
         record_exist = number_of_rows > 0
         if not record_exist:
             cursor.execute(
                 '''
-                INSERT INTO offsprings(gid, offspring_id) VALUES('{}', '{}')
+                INSERT INTO offsprings(gid, offspring_id) VALUES('{0}', '{1}')
                 '''.format(gorilla.identifier, offspring.identifier))
-            connection.commit()
+            if commit_on_insert:
+                connection.commit()
             # print("Offspring {} of gorilla {} inserted successfully.".format(
             #     offspring.identifier, gorilla.identifier))
     except Exception as ex:
         print("Insert offspring Error: ", ex,
               gorilla.identifier, offspring.identifier)
+        traceback.print_exc()
     finally:
         pass
         # connection.close()

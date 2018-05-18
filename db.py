@@ -12,7 +12,8 @@ from gorilla import Gorilla
 from mate_queries import (
     build_query,
     build_cousin_query,
-    build_grandparent_query
+    build_grandparent_query,
+    build_removed_cousin_query,
 )
 
 DATABASE_PATH = 'gorilla.db'
@@ -270,19 +271,29 @@ def get_relations(sex, relation_type, gid, connection=None):
         cursor = execute_query(query, connection)
         for row in cursor:
             relation_identifiers.append(row[0])
-    if query is None and relation_type == "cousins":
-        for i in range(5):  # Max cousin level = 6
-            query = build_cousin_query(
-                level=i,
-                grandparents_query=build_grandparent_query(
-                    level=i, offspring_id=gid
+    if query is None:
+        if relation_type == "cousins":
+            for i in range(5):  # Max cousin level = 6
+                query = build_cousin_query(
+                    level=i,
+                    grandparents_query=build_grandparent_query(
+                        level=i, offspring_id=gid
+                    )
                 )
-            )
-            cursor = execute_query(query, connection)
-            relation_identifiers.append([])
-            for row in cursor:
-                if row[0] != gid:  # TODO: This should be in the query.
-                    relation_identifiers[i].append(row[0])
+                cursor = execute_query(query, connection)
+                relation_identifiers.append([])
+                for row in cursor:
+                    if row[0] != gid:  # TODO: This should be in the query.
+                        relation_identifiers[i].append(row[0])
+        elif relation_type == "cousins_once_removed":
+            for i in range(1):
+                # TODO: Duplicated code here. Review.
+                query = build_removed_cousin_query(gid, level=i+1)
+                cursor = execute_query(query, connection)
+                relation_identifiers.append([])
+                for row in cursor:
+                    if row[0] != gid:  # TODO: This should be in the query.
+                        relation_identifiers[i].append(row[0])
     return relation_identifiers
 
 

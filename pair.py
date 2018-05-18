@@ -36,7 +36,7 @@ def get_relation_percetages(relation_type):
 def assign_percentages_to_mates(mates):
     return_obj = {}
     for key, value in mates.items():
-        if key != "cousins":
+        if key != "cousins" and key != "cousins_once_removed":
             for relation in value:
                 return_obj[relation] = get_relation_percetages(key)
         else:

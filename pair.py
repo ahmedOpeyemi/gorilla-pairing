@@ -76,6 +76,7 @@ def find_best_mates(gorilla):
         'nephews': [],
         'half_siblings': [],
         'cousins': [],
+        'cousins_once_removed': []
     }
     for key, value in relations.items():
         if value == []:

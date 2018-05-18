@@ -43,17 +43,13 @@ def build_cousin_query(level, grandparents_query):
 
 
 def build_removed_cousin_query(offspring_id, level=1):
-    # get the two fathers at different levels
+    # TODO: Review this query implementation.
     left_parent_query = build_grandparent_query(level, offspring_id)
     right_parent_query = build_grandparent_query(level + 1, offspring_id)
     return '''
         SELECT offspring_id FROM offsprings grand WHERE grand.gid IN ({0})
         AND grand.gid IN ({1})
     '''.format(left_parent_query, right_parent_query)
-    # Build grandfathers query,
-    # Build greatgrandfathers query,
-    # Get offsprings that are from a combination of both.
-    pass
 
 
 def build_query(gid, sex):

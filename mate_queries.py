@@ -42,6 +42,13 @@ def build_cousin_query(level, grandparents_query):
     return return_string
 
 
+def build_removed_cousin_query(gid, level=2):
+    # Build grandfathers query,
+    # Build greatgrandfathers query,
+    # Get offsprings that are from a combination of both.
+    pass
+
+
 def build_query(gid, sex):
     parent_label = 'sire' if sex == 'M' else 'dam'
     return {
